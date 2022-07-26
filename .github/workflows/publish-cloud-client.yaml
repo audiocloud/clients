@@ -1,4 +1,4 @@
-on: [ release ]
+on: [ workflow_dispatch ]
 
 name: Build Cloud Client package and publish to NPM
 
