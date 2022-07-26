@@ -12,7 +12,7 @@
     "build": "tsc && tsc -p tsconfig-cjs.json && tsc -p tsconfig-types.json"
   },
   "dependencies": {
-    "@audiocloud/api": "^0.0.2"
+    "@audiocloud/api": "^0.0.3"
   },
   "devDependencies": {
     "typescript": "^4"
