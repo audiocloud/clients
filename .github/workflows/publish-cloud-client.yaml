@@ -1,0 +1,26 @@
+on: [ release ]
+
+name: Build API package and publish to NPM
+
+jobs:
+  build:
+    name: NPM build and publish
+    defaults:
+      run:
+        working-directory: js-cloud-client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout API code
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+        name: Install dependencies
+      - run: npm run build
+        name: Build API package
+      - run: npm publish --access public
+        name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
