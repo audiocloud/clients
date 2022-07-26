@@ -1,6 +1,6 @@
 on: [ release ]
 
-name: Build API package and publish to NPM
+name: Build Cloud Client package and publish to NPM
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        name: Checkout API code
+        name: Checkout Cloud Client code
       - uses: actions/setup-node@v3
         with:
           node-version: '18.x'
@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
         name: Install dependencies
       - run: npm run build
-        name: Build API package
+        name: Build Cloud Client package
       - run: npm publish --access public
         name: Publish to NPM
         env:
