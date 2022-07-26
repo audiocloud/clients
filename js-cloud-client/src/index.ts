@@ -1,10 +1,4 @@
-import {SecureKey, SessionSecurity} from "@audiocloud/api";
-
-// not cool, we want to get all the types from the main import, move stuff from "apps" into main export
-import {CreateSession, SessionSpec} from "@audiocloud/api/dist/types/cloud/apps";
-
-// not cool as well
-import {ModifySessionSpec} from "@audiocloud/api/dist/types/change";
+import { SecureKey, SessionSecurity, CreateSession, SessionSpec, ModifySessionSpec } from "@audiocloud/api";
 
 type Success = { ok: true }
 
