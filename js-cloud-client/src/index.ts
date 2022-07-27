@@ -16,7 +16,7 @@ export class CloudClient {
         }
     }
 
-    async create_session(session_id: string, create: CreateSession & { time: { from: Date, to: Date } }, app_id?: string): Promise<Success> {
+    async create_session(session_id: string, create: Omit<CreateSession, "time"> & { time: { from: Date, to: Date } }, app_id?: string): Promise<Success> {
         app_id = app_id || this.default_app_id;
         return fetch(`${this.base_url}/v1/${app_id}/sessions/${session_id}`, {
             method: "POST",
