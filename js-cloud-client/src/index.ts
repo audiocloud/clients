@@ -2,6 +2,19 @@ import { SecureKey, SessionSecurity, CreateSession, SessionSpec, ModifySessionSp
 
 type Success = { ok: true }
 
+const handle_response = async (res: Response) => {
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    const data = isJson ? await res.json() : null;
+
+    // check for error response
+    if (!res.ok) {
+        const error = (data && data.err) || res.status;
+        return Promise.reject(error);
+    } else {
+        return data
+    }
+}
+
 export class CloudClient {
     constructor(
         private readonly api_key: string,
@@ -22,18 +35,7 @@ export class CloudClient {
             method: "POST",
             headers: this.default_headers,
             body: JSON.stringify(create)
-        }).then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-    
-            // check for error response
-            if (!res.ok) {
-                const error = (data && data.err) || res.status;
-                return Promise.reject(error);
-            } else {
-                return data
-            }
-        })
+        }).then(handle_response)
     }
 
     async replace_session_spec(session_id: string, spec: SessionSpec, app_id?: string): Promise<Success> {
@@ -42,18 +44,7 @@ export class CloudClient {
             method: "PUT",
             headers: this.default_headers,
             body: JSON.stringify(spec)
-        }).then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-    
-            // check for error response
-            if (!res.ok) {
-                const error = (data && data.err) || res.status;
-                return Promise.reject(error);
-            } else {
-                return data
-            }
-        })
+        }).then(handle_response)
     }
 
     async replace_session_security(session_id: string, security: Record<SecureKey, SessionSecurity>, app_id?: string): Promise<Success> {
@@ -62,18 +53,7 @@ export class CloudClient {
             method: "PUT",
             headers: this.default_headers,
             body: JSON.stringify(security)
-        }).then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-    
-            // check for error response
-            if (!res.ok) {
-                const error = (data && data.err) || res.status;
-                return Promise.reject(error);
-            } else {
-                return data
-            }
-        })
+        }).then(handle_response)
     }
 
     async modify_session(session_id: string, modify: Array<ModifySessionSpec>, app_id?: string): Promise<Success> {
@@ -82,18 +62,7 @@ export class CloudClient {
             method: "POST",
             headers: this.default_headers,
             body: JSON.stringify(modify)
-        }).then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-    
-            // check for error response
-            if (!res.ok) {
-                const error = (data && data.err) || res.status;
-                return Promise.reject(error);
-            } else {
-                return data
-            }
-        })
+        }).then(handle_response)
     }
 
     async delete_session(app_id: string, session_id: string): Promise<Success> {
@@ -101,18 +70,6 @@ export class CloudClient {
         return fetch(`${this.base_url}/v1/${app_id}/by-id/${session_id}`, {
             method: "DELETE",
             headers: this.default_headers
-        }).then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-    
-            // check for error response
-            if (!res.ok) {
-                const error = (data && data.err) || res.status;
-                return Promise.reject(error);
-            } else {
-                return data
-            }
-        })
+        }).then(handle_response)
     }
 }
-
