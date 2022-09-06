@@ -19,7 +19,8 @@ export class CloudClient {
     constructor(
         private readonly api_key: string,
         private readonly default_app_id: string,
-        private readonly base_url = "https://api.audiocloud.io"
+        // private readonly base_url = "https://api.audiocloud.io"
+        private readonly base_url = "https://distopik-hq.eu.audiocloud.io"
     ) {}
 
     get default_headers() {
