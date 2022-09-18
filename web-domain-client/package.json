@@ -1,12 +1,28 @@
 {
-  "name": "@audiocloud/domain-client",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@audiocloud/domain-rt-client",
+  "version": "2.0.1",
+  "description": "Audio Cloud Domain Client for Web",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc && tsc -p tsconfig-cjs.json && tsc -p tsconfig-types.json",
+    "update": "npm update"
   },
-  "keywords": [],
-  "author": "",
+  "dependencies": {
+    "@audiocloud/domain-client": "^2.0.5",
+    "notepack.io": "^3.0.1",
+    "nanoid": "^4.0.0",
+    "reconnecting-websocket": "^4.4.0",
+    "async-mutex": "^0.4.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.3.2"
+  },
+  "keywords": [
+    "openapi",
+    "generator"
+  ],
+  "author": "Bojan Šernek",
   "license": "ISC"
 }

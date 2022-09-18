@@ -1,6 +1,6 @@
 on: [ workflow_dispatch ]
 
-name: Build Cloud Client package and publish to NPM
+name: Build Domain Client package and publish to NPM
 
 jobs:
   build:
