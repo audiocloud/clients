@@ -1,62 +1,66 @@
-
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import {pack, unpack} from 'msgpackr';
+import {DomainClientMessage, DomainServerMessage} from "@audiocloud/domain-client";
 
 export class WebDomainClient {
-    constructor(
-        private readonly api_key: string,
-        private readonly default_app_id: string,
-        private readonly domain_public_url: string,
+    private readonly web_socket_url: string;
+    private readonly response_queue: Array<DomainClientMessage> = []
+    private web_socket: ReconnectingWebSocket
 
-        private web_socket_state: string = 'closed',
-        private current_request: string = '',
-        private timeout_error: string = ''
-    ) {}
+    constructor(private readonly api_url: string) {
+        this.web_socket_url = api_url.replace(/http/, 'ws') + '/ws'
+        console.log(this.web_socket_url)
+        this.web_socket = new ReconnectingWebSocket(this.web_socket_url);
+        this.web_socket.binaryType = 'arraybuffer'
+        this.web_socket.onopen = this.on_open.bind(this)
+        this.web_socket.onclose = this.on_close.bind(this)
+        this.web_socket.onmessage = this.on_raw_message.bind(this)
+    }
 
-    get default_headers() {
-        return {
-            "X-Api-Key": this.api_key,
-            "Content-Type": "application/json"
+    get connected() {
+        return this.web_socket.readyState == ReconnectingWebSocket.OPEN
+    }
+
+    private on_open() {
+        console.log('[web_socket]: open')
+        this.flush_responses()
+    }
+
+    private flush_responses() {
+        if (this.connected) {
+            while (this.response_queue.length > 0) {
+                this.web_socket.send(pack(this.response_queue.shift()))
+            }
         }
     }
 
-    // setters
+    private on_close() {
+        console.log('[web_socket]: close')
+    }
 
-    // class methods
-    // - open WebSocket connection
+    private on_raw_message(data: MessageEvent) {
+        let message: DomainServerMessage
+        if (data.data instanceof ArrayBuffer) {
+            message = unpack(new Uint8Array(data.data))
+        } else {
+            message = JSON.parse(data.data)
+        }
+        this.on_message(message)
+    }
 
-    async connectWS() {
+    private on_message(message: DomainServerMessage) {
+        if ('ping' in message) {
+            console.log('PING', message.ping.challenge)
+            this.respond({
+                pong: {challenge: message.ping.challenge, response: 'pongity pong pong'}
+            })
+        }
+    }
 
-        const url = `wss${this.domain_public_url.split('https')[1]}/ws`
-        
-        const socket = new WebSocket(url)
-
-        // binary frames
-        // npm msgpack
-
-        // min 1 session packet na sekundo
-
-        // security eventually
-
-        socket.addEventListener('open', (event) => {
-            console.log(`[Client] Connected...`)
-            console.log(event)
-            this.web_socket_state = 'open'
-        })
-
-        socket.addEventListener('message', (data) => {
-            console.log(`[Client] Message received: ${data}`)
-
-            // something like this:
-            // msgpack.unpack(data)
-        })
-
-        socket.addEventListener('error', (error) => {
-            console.log(error)
-            this.web_socket_state = 'error'
-        })
-
-        socket.addEventListener('close', () => {
-            console.log(`[Client] Connection closed.`)
-            this.web_socket_state = 'closed'
-        })
+    private respond(message: DomainClientMessage) {
+        this.response_queue.push(message)
+        this.flush_responses()
     }
 }
+
+const client = new WebDomainClient('http://localhost:7200');
