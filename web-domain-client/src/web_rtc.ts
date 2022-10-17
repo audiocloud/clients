@@ -1,6 +1,6 @@
 import { Socket, SocketsSupervisor, SocketState } from './supervisor'
 import { DomainClientMessage } from '@audiocloud/domain-client'
-import { pack } from 'msgpackr'
+import { pack, unpack } from 'msgpackr'
 
 const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }]
 
@@ -19,6 +19,15 @@ export class WebRtcSocket implements Socket {
     private on_data_channel(event: RTCDataChannelEvent) {
         console.log('RTC', this.id, 'new data_channel', event.channel.label)
         this.data_channel = event.channel
+        this.data_channel.onmessage = this.on_data_message.bind(this)
+    }
+
+    private on_data_message(message: MessageEvent) {
+        this.supervisor.on_message(this.id, unpack(new Uint8Array(message.data)))
+    }
+
+    sumbit_remote_candidate(candidate: string | null) {
+        this.peer_connection.addIceCandidate(candidate ? JSON.parse(candidate) : undefined)
     }
 
     get_state(): SocketState {
@@ -52,19 +61,26 @@ export class WebRtcSocket implements Socket {
             }
 
             let remote_sdp = JSON.parse(remote.ok.created.remote_description)
+            let socket_id = remote.ok.created.socket_id.socket_id
 
+            peer_connection.onicecandidate = (event) => {
+                supervisor
+                    .request_submit_peer_candidate(socket_id, event.candidate ? JSON.stringify(event.candidate) : null)
+                    .catch((err) => {
+                        console.error('RTC', socket_id, 'received error submitting peer', err)
+                    })
+            }
             peer_connection.setRemoteDescription(remote_sdp)
+
             const answer_sdp = await peer_connection.createAnswer(remote_sdp)
 
             console.log('created answer', { answer_sdp })
 
-            await supervisor.request_answer_peer_connection((<any>remote.ok.created.socket_id).socket_id, JSON.stringify(answer_sdp))
+            await supervisor.request_answer_peer_connection(socket_id, JSON.stringify(answer_sdp))
 
             peer_connection.setLocalDescription(answer_sdp)
 
-            supervisor.register_web_rtc_socket(
-                new WebRtcSocket(remote.ok.created.socket_id, peer_connection, supervisor)
-            )
+            supervisor.register_web_rtc_socket(new WebRtcSocket(socket_id, peer_connection, supervisor))
         } finally {
             console.log('WebRtc constructor ended')
         }

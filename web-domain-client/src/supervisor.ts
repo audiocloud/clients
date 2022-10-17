@@ -1,7 +1,8 @@
-import { WebSocket } from './web_socket'
 import { DomainClientMessage, DomainServerMessage } from '@audiocloud/domain-client'
-import { WebRtcSocket } from './web_rtc'
 import { nanoid } from 'nanoid'
+
+import { WebSocket } from './web_socket'
+import { WebRtcSocket } from './web_rtc'
 
 type ResponseHandlerRegistration = {
     at: Date
@@ -61,6 +62,11 @@ export class SocketsSupervisor {
         console.log('on_message', socket_id, message)
         if ('ping' in message) {
             this.emit({ pong: { challenge: message.ping.challenge, response: '' } }, socket_id)
+        } else if ('submit_peer_connection_candidate' in message) {
+            const socket = this.sockets.get(message.submit_peer_connection_candidate.socket_id)
+            if (socket && socket instanceof WebRtcSocket) {
+                socket.sumbit_remote_candidate(message.submit_peer_connection_candidate.candidate || null)
+            }
         } else {
             this.response_handlers = this.response_handlers.filter(({ at: registered_at, resolve, reject }) => {
                 if (new Date(registered_at.valueOf() + 15000) <= new Date()) {
@@ -128,6 +134,20 @@ export class SocketsSupervisor {
                 msg.answer_peer_connection_response.request_id == request_id
             ) {
                 return msg.answer_peer_connection_response.result
+            } else {
+                return null
+            }
+        })
+    }
+
+    request_submit_peer_candidate(socket_id: string, candidate: string | null) {
+        const request_id = nanoid()
+        return this.std_request({ submit_peer_connection_candidate: { request_id, socket_id, candidate } }, (msg) => {
+            if (
+                'peer_connection_candidate_response' in msg &&
+                msg.peer_connection_candidate_response.request_id == request_id
+            ) {
+                return msg.peer_connection_candidate_response.result
             } else {
                 return null
             }
