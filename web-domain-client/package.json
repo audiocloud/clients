@@ -22,12 +22,14 @@
   "dependencies": {
     "msgpackr": "^1",
     "reconnecting-websocket": "^4",
-    "@audiocloud/domain-client": "^2.0.14"
+    "@audiocloud/domain-client": "2.0.19",
+    "nanoid": "^4"
   },
   "devDependencies": {
     "@types/node": "^18.7.11",
     "buffer": "^6.0.3",
     "parcel": "^2",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "prettier": "^2.7.1"
   }
 }
